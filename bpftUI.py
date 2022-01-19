@@ -8,7 +8,7 @@ import os
 import re
 # noinspection PyCompatibility
 from tkinter import *
-
+import json
 import requests
 import urllib3
 from retrying import retry
@@ -98,7 +98,7 @@ s = requests.session()
 # 获取bdstoken函数
 @retry(stop_max_attempt_number=5, wait_fixed=1000)
 def get_bdstoken():
-    url = 'https://pan.baidu.com/disk/home'
+    url = 'https://pan.baidu.com/disk/home?stayAtHome=true#'
     response = s.get(url=url, headers=request_header, timeout=20, allow_redirects=True, verify=False)
     # bdstoken_list = re.findall("'bdstoken',\\s'(\\S+?)'", response.text)
     bdstoken_list = re.findall('"bdstoken":"(\\S+?)"', response.text)
@@ -184,7 +184,7 @@ def transfer_files(check_links_reason, dir_name, bdstoken):
 
 
 @retry(stop_max_attempt_number=200, wait_fixed=2000)
-def cloud_push_files(success_count, bdstoken, device_id):
+def cloud_push_files(undownloaded, bdstoken, device_id):
     url = "https://pan.baidu.com/rest/2.0/dss/command?method=publish&appid=250528" + '&bdstoken=' + bdstoken + '&channel=chunlei&web=1&clienttype=0'
     post_data = {'device_id': device_id,
                  'cmdinfo[0][title]': 'title',
@@ -196,8 +196,7 @@ def cloud_push_files(success_count, bdstoken, device_id):
                  'cmdinfo[0][priority]' : 1,
                  'cmdinfo[0][period]' : 10,
                  'cmdinfo[0][src]': 1}
-    filelist = get_dir_list(bdstoken)[2:2+success_count]
-    for idx, file in enumerate(filelist):
+    for idx, file in enumerate(undownloaded):
         header = 'cmdinfo[0][cmd_param][filelist][' + str(idx) + ']'
         for key in file:
             if isinstance(file[key], dict):
@@ -208,6 +207,18 @@ def cloud_push_files(success_count, bdstoken, device_id):
     response = s.post(url=url, headers=request_header, data=post_data, timeout=15, allow_redirects=False,
                       verify=False)
     return response.json()
+
+
+def cloud_push_list(bdstoken):
+    url = "https://pan.baidu.com/rest/2.0/dss/task?method=listbyuser&channel=chunlei&web=1&app_id=250528&bdstoken=" + '&bdstoken=' + bdstoken + "&clienttype=0"
+    post_data = {"appid": 250528, "start":0, "limit":100 }
+    response = s.post(url=url, headers=request_header, data=post_data, timeout=15, allow_redirects=False, verify=False)
+    response = response.json()
+    file_list = []
+    for task in response['taskinfo']:
+        obj = json.loads(task['cmd_param'])
+        file_list += [int(file['fs_id']) for file in obj['filelist']]
+    return file_list
 
 
 # 转存秒传链接函数

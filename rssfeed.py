@@ -1,5 +1,5 @@
 import feedparser
-from bpftUI import get_bdstoken, check_links,transfer_files, request_header,cloud_push_files,get_dir_list
+from bpftUI import get_bdstoken, check_links,transfer_files, request_header,cloud_push_files,get_dir_list,cloud_push_list
 import os
 if not os.path.exists("saved_url.txt"):
     with open("saved_url.txt", "w+") as file:
@@ -67,6 +67,13 @@ request_header['Cookie'] = cookie
 request_header['User-Agent'] = user_agent
 bdstoken = get_bdstoken()
 with open("device_id.txt", "r") as file:
-    device_id = file.readline()[:-1]
+    device_id = int(file.readline()[:-1])
 filelist = get_dir_list(bdstoken)[2:]
-cloud_push_files(success_count, bdstoken, device_id)
+cloud_list = cloud_push_list(bdstoken)
+print(cloud_list)
+undownload = []
+for file in filelist:
+    if not file['fs_id'] in cloud_list:
+        undownload.append(file)
+print([f['fs_id'] for f in undownload])
+cloud_push_files(undownload, bdstoken, device_id)
