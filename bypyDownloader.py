@@ -3,6 +3,9 @@ from bypy.util import get_pcs_path,print_pcs_list
 bp=ByPy()
 fmt='$t $f $s $m $d'
 a=bp.list()
+if not os.path.exists("downloaded.txt"):
+    with open("downloaded.txt", "w+") as file:
+        savedUrl = []
 with open("downloaded.txt", "r") as file:
     savedUrl = file.readlines()
 savedUrl1 = set(savedUrl)
