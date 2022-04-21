@@ -1,5 +1,5 @@
 from bypy import ByPy
-from bypy.util import get_pcs_path,print_pcs_list
+import os
 bp=ByPy()
 fmt='$t $f $s $m $d'
 a=bp.list()
