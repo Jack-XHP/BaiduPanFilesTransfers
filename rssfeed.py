@@ -1,5 +1,6 @@
 import feedparser
 from bpftUI import get_bdstoken, check_links,transfer_files, request_header,cloud_push_files,get_dir_list,cloud_push_list
+
 import os
 if not os.path.exists("saved_url.txt"):
     with open("saved_url.txt", "w+") as file:
@@ -8,14 +9,15 @@ with open("saved_url.txt", "r") as file:
     savedUrl = file.readlines()
 savedUrl1 = set(savedUrl)
 from html.parser import HTMLParser
-NewsFeed = feedparser.parse("https://rsshub-2xa7iyxou-diy.vercel.app/fanxinzhui")
+NewsFeed = feedparser.parse("http://127.0.0.1:1200/fanxinzhui")
+
 urlKey = []
 for entry in NewsFeed.entries:
     entry = entry['summary']
     start = entry.find("https://pan.baidu.com")
     end = entry[start:].find(" ")
     url = entry[start:start+end-1]
-    if url+"\n" in savedUrl:
+    if url+"\n" in savedUrl1:
         continue
     start = entry.find("password")
     end = entry[start:].find(">") + start +1
@@ -45,7 +47,7 @@ for url, key in urlKey:
         print( '错误尝试次数过多,请稍后再试:' + url + '\n')
     elif isinstance(check_links_reason, list):
         # 执行转存文件
-        transfer_files_reason = transfer_files(check_links_reason, "", bdstoken)
+        transfer_files_reason = transfer_files(check_links_reason, "/apps/bypy", bdstoken)
         if transfer_files_reason['errno'] == 0:
             print( '转存成功:' + url + '\n')
             savedUrl.append(url +"\n")
@@ -77,3 +79,4 @@ for file in filelist:
         undownload.append(file)
 print([f['fs_id'] for f in undownload])
 cloud_push_files(undownload, bdstoken, device_id)
+
